@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Mass Connect",
+    "slug": "jitbrands-church-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/massconnect.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1C7676"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "com.jitbrands.churchapp",
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon1.png",
+        "backgroundColor": "#1C7676"
+      },
+      "softwareKeyboardLayoutMode": "pan",
+      "package": "com.jitbrands.churchapp",
+      "versionCode": 1,
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "265efb42-c505-441e-b016-0235fac9d529"
+      }
+    }
+  }
+}

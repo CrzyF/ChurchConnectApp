@@ -1,0 +1,450 @@
+import React, { useContext, useEffect, useRef, useState } from 'react'
+import {
+  View,
+  StyleSheet,
+  Text,
+  FlatList,
+  TouchableWithoutFeedback,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+  Button,
+} from 'react-native'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
+import _ from 'lodash'
+import DateTimePicker from '@react-native-community/datetimepicker'
+
+import colors from '../components/colors'
+import HeaderComponent from '../components/HeaderComponent'
+import Screen from '../components/Screen'
+import fonts from '../config/fonts'
+import DatePickerComponent from '../components/DatePickerComponent'
+// import readList from '../services/dailyReadingsServices';
+import onlineData from '../services/getData'
+import dataStore from '../services/dataStore'
+import dailyReadings from '../services/dailyReadings'
+import DatePickerScreen from './DatePickerScreen'
+import authApi from '../services/auth'
+import useApi from '../services/useApi'
+import { async } from '@firebase/util'
+
+// import { getDailyReadings } from '../services/dailyReadingsServices';
+
+// const readList = getDailyReadings();
+
+const {
+  fontSizeSmall,
+  fontSizeLarge,
+  fontSizeMedium,
+  fontSizeNormal,
+  fontSizeSmaller,
+} = fonts
+
+const ReadItem = ({ day, title, firstReading, gospel, onPress }) => {
+  return (
+    <TouchableWithoutFeedback onPress={onPress}>
+      <View style={{ paddingVertical: 20 }}>
+        <Text style={styles.day}>{day}</Text>
+        <Text style={styles.title}>{title}</Text>
+        {/* <Text numberOfLines={1}>
+          <Text style={styles.firstReadingLabel}>First Reading:</Text>
+          <Text style={styles.firstReading}> {firstReading} </Text>
+          <Text style={styles.gospelLabel}>Gospel:</Text>
+          <Text style={styles.gospel} numberOfLines={1}>
+            {' '}
+            {gospel}
+          </Text>
+        </Text> */}
+      </View>
+    </TouchableWithoutFeedback>
+  )
+}
+
+const ItemSeparator = () => {
+  return <View style={styles.itemSeparator}></View>
+}
+
+const range = (start, end) => {
+  const ans = []
+  for (let i = start; i <= end; i++) {
+    ans.push(i)
+  }
+  return ans
+}
+
+const Pagination = ({
+  itemsCount,
+  pageSize,
+  currentPage,
+  onPageChange,
+  style,
+}) => {
+  const pagesCount = Math.ceil(itemsCount / pageSize)
+  const pages = range(1, pagesCount)
+  if (pagesCount <= 1) return null
+
+  return (
+    <>
+      <View style={[styles.pageNumbers, style]}>
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableWithoutFeedback
+            onPress={() => onPageChange(currentPage > 0 ? currentPage - 1 : 0)}
+          >
+            <View style={styles.button}>
+              <MaterialCommunityIcons
+                name="chevron-left"
+                color={colors.primary}
+                size={20}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+
+          <ScrollView horizontal style={{}}>
+            {pages.map((page, index) => (
+              <TouchableWithoutFeedback
+                key={index}
+                onPress={() => onPageChange(page - 1)}
+              >
+                <View
+                  style={[
+                    styles.button,
+                    page === currentPage + 1 ? styles.activePage : null,
+                  ]}
+                >
+                  <Text style={{ color: colors.primary }}>{page}</Text>
+                </View>
+              </TouchableWithoutFeedback>
+            ))}
+          </ScrollView>
+
+          <TouchableWithoutFeedback
+            onPress={() =>
+              onPageChange(
+                currentPage < pagesCount - 1 ? currentPage + 1 : currentPage,
+              )
+            }
+          >
+            <View style={styles.button}>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                color={colors.primary}
+                size={20}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </View>
+    </>
+  )
+}
+
+const DailyReadings = ({ navigation }) => {
+  const [readList, setReadList] = useState(dailyReadings)
+
+  const [currentPage, setCurrentPage] = useState(0)
+  const [itemsCount, setItemsCount] = useState(readList.length)
+  const [sortDate, setSortDate] = useState()
+
+  const listPerPage = 3
+  const pagesVisited = currentPage * listPerPage
+
+  const list = _.orderBy(
+    readList.filter((list) =>
+      sortDate
+        ? String(list.date.month).substring(0, 3) +
+            ' ' +
+            list.date.year.toString() ===
+          sortDate
+        : readList,
+    ),
+    ['id'],
+  )
+  const listDisplay = list.slice(pagesVisited, pagesVisited + listPerPage)
+
+  const [openDatePicker, setOpenDatePicker] = useState(false)
+  const [date, setDate] = useState(new Date())
+
+  const handleDateChange = (event, date) => {
+    const selectedDate =
+      date.toDateString().substring(4, 7) + ' ' + date.getFullYear().toString()
+    setSortDate(selectedDate)
+    setDate(date)
+    setItemsCount(
+      readList.filter(
+        (list) =>
+          String(list.date.month).substring(0, 3) +
+            ' ' +
+            list.date.year.toString() ===
+          selectedDate,
+      ).length,
+    )
+    setCurrentPage(0)
+  }
+
+  const {
+    request: getDailyReadings,
+    data: dailyReadingsx,
+    loading,
+    error,
+  } = useApi(authApi.getDailyReadings)
+
+  const dates = [
+    '2023-02-22',
+    'today',
+    'yesterday',
+    'tomorrow',
+    'last Sunday',
+    'next Sunday',
+    'last week Sunday',
+    'next week Sunday',
+  ]
+
+  const [data, setData] = useState([])
+
+  const getReading = () => {
+    const dailyReadingss = []
+
+    dates.forEach(async (date) => {
+      await authApi
+        .getDailyReadings(date)
+        .then((data) => {
+          if (!dailyReadingss.includes(data.data.data)) {
+            dailyReadingss.push(data.data.data)
+          }
+        })
+        .catch((err) => console.log('Error ', err))
+      setData(dailyReadingss)
+    })
+  }
+
+  useEffect(() => {
+    getReading()
+  }, [])
+
+  return (
+    <>
+      <Screen>
+        <HeaderComponent
+          navigation={navigation}
+          backEnabled
+          title={'Daily Readings'}
+        />
+
+        <>
+          <TouchableOpacity
+            style={styles.date}
+            onPress={() => setOpenDatePicker(true)}
+          >
+            {/* <DatePickerComponent 
+                onSelectDate={date => {
+                  setSortDate(String(date).toLowerCase()); 
+                  // setItemsCount(readList.filter(list => (String(list.date.month).substring(0,3).toLowerCase() + ' ' + list.date.year.toString()) === String(date).toLowerCase()).length);
+                  setCurrentPage(0)
+                }}
+              /> */}
+            <Text
+              style={{
+                fontSize: fontSizeNormal,
+                color: colors.light,
+                marginEnd: 10,
+              }}
+            >
+              {sortDate || 'select date'}
+            </Text>
+            <MaterialCommunityIcons
+              name="calendar-blank"
+              color={colors.primary}
+              size={20}
+            />
+          </TouchableOpacity>
+
+          {loading ? (
+            <Text>Loading...</Text>
+          ) : (
+            <View style={{ flex: 1 }}>
+              {!loading && error ? (
+                <View style={{ flexDirection: 'row' }}>
+                  <Text>Unable to load data, </Text>
+                  <Text
+                    style={{
+                      color: colors.primary,
+                      textDecorationLine: 'underline',
+                      textDecorationColor: colors.primary,
+                    }}
+                    onPress={() => getDailyReadings('2023-02-22')}
+                  >
+                    Retry
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  {/* <FlatList
+                    data={listDisplay}
+                    keyExtractor={(item) => item.id.toString()}
+                    style={{ paddingBottom: 10 }}
+                    renderItem={({ item }) => (
+                      <ReadItem
+                        day={
+                          item.date.month +
+                          ' ' +
+                          item.date.day +
+                          ' ' +
+                          item.date.year.toString() +
+                          ' - ' +
+                          item.date.dayOfWeek
+                        }
+                        title={item.title}
+                        firstReading={item.firstReading}
+                        gospel={item.gospel}
+                        onPress={() =>
+                          navigation.navigate('DailyReading', { item, list })
+                        }
+                      />
+                    )}
+                    // refreshing={load}
+                    // onRefresh={()=> {getReadings(); request();}}
+                    ItemSeparatorComponent={() => <ItemSeparator />}
+                  /> */}
+                  <FlatList
+                    data={data}
+                    // keyExtractor={(item) => item.title}
+                    style={{
+                      paddingBottom: 10,
+                      flex: 1,
+                    }}
+                    renderItem={({ item }) => (
+                      <ReadItem
+                        title={item.date + ' - ' + item.weekday}
+                        // firstReading={'firstreading'}
+                        // gospel={'gospel'}
+                        day={item.title}
+                        onPress={() =>
+                          navigation.navigate('DailyReading', { item })
+                        }
+                      />
+                    )}
+                    ItemSeparatorComponent={() => <ItemSeparator />}
+                  />
+
+                  {/* <Pagination
+                    itemsCount={itemsCount}
+                    pageSize={listPerPage}
+                    currentPage={currentPage}
+                    onPageChange={(page) => setCurrentPage(page)}
+                    style={{ marginBottom: 10 }}
+                  /> */}
+                </>
+              )}
+            </View>
+          )}
+        </>
+      </Screen>
+      {openDatePicker && (
+        <View
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, .5)',
+            position: 'absolute',
+            height: '100%',
+            width: '100%',
+            zIndex: 1,
+          }}
+        >
+          <DateTimePicker
+            value={date}
+            mode={'date'}
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            is24Hour={true}
+            onChange={handleDateChange}
+            style={styles.datePicker}
+          />
+          {Platform.OS === 'ios' && (
+            <Text
+              style={{
+                backgroundColor: 'white',
+                width: '100%',
+                textAlign: 'right',
+                padding: 10,
+              }}
+              onPress={() => setOpenDatePicker(false)}
+            >
+              Done
+            </Text>
+          )}
+        </View>
+      )}
+    </>
+  )
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fafafa',
+    justifyContent: 'flex-start',
+    paddingTop: 25,
+    paddingHorizontal: 20,
+  },
+  date: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  day: {
+    color: colors.primary,
+    fontSize: fontSizeMedium,
+    marginBottom: 5,
+    textTransform: 'capitalize',
+  },
+  title: {
+    color: colors.light,
+    marginBottom: 5,
+  },
+  firstReading: {
+    marginEnd: 10,
+  },
+  firstReadingLabel: {
+    color: colors.primary,
+    marginRight: 5,
+    fontSize: fontSizeNormal,
+  },
+  gospelLabel: {
+    color: colors.danger,
+    marginBottom: 5,
+    marginRight: 5,
+    fontSize: fontSizeNormal,
+  },
+  itemSeparator: {
+    width: '100%',
+    height: 1,
+    backgroundColor: colors.lighter,
+  },
+  pageNumbers: {
+    borderTopColor: colors.lighter,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  button: {
+    borderWidth: 1,
+    borderRadius: 5,
+    borderColor: colors.primary,
+    padding: 5,
+    marginRight: 7,
+    minWidth: 30,
+    alignItems: 'center',
+  },
+  activePage: {
+    backgroundColor: '#e0e0e0',
+  },
+  datePicker: {
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    width: '100%',
+    height: 260,
+    display: 'flex',
+    backgroundColor: 'white',
+  },
+})
+
+export default DailyReadings
