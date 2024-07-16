@@ -41,6 +41,7 @@
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "owner": "c75y_f"
   }
 }
