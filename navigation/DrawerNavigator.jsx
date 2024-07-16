@@ -492,7 +492,6 @@ function MyDrawer({ navigation }) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <Drawer.Navigator
-        useLegacyImplementation
         drawerContent={(props) => <CustomDrawerContent {...props} />}
         screenOptions={{
           headerShown: false,

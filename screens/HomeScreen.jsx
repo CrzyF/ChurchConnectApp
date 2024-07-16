@@ -232,7 +232,7 @@ const HomeScreen = ({ navigation }) => {
                                 textTransform: "capitalize",
                               }}
                             >
-                              {reading.weekday}
+
                             </Text>
                             <Text
                               style={{
@@ -241,9 +241,9 @@ const HomeScreen = ({ navigation }) => {
                                 fontWeight: "700",
                                 marginBottom: 5,
                               }}
-                              // numberOfLines={3}
+                            // numberOfLines={3}
                             >
-                              {reading.subTitle}
+
                             </Text>
                             <Text
                               style={{
@@ -251,9 +251,9 @@ const HomeScreen = ({ navigation }) => {
                                 textAlign: "center",
                                 fontWeight: "700",
                               }}
-                              // numberOfLines={3}
+                            // numberOfLines={3}
                             >
-                              {reading.title}
+
                             </Text>
                           </View>
                         </TouchableOpacity>

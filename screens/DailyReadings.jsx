@@ -188,8 +188,8 @@ const DailyReadings = ({ navigation }) => {
                     }}
                     renderItem={({ item }) => (
                       <ReadItem
-                        title={item.date + ' - ' + item.weekday}
-                        day={item.title}
+                        // title={item.date + ' - ' + item.weekday}
+                        // day={item.title}
                         onPress={() =>
                           navigation.navigate('DailyReading', { item })
                         }
