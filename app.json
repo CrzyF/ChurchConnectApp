@@ -27,9 +27,8 @@
         "backgroundColor": "#1C7676"
       },
       "softwareKeyboardLayoutMode": "pan",
-      "package": "com.jitbrands.churchapp",
-      "versionCode": 1,
-      "googleServicesFile": "./google-services.json"
+      "package": "com.c75y_f.thecatholicapp",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"

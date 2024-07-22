@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react';
-import { getDatabase, ref, child, set, get, onValue } from 'firebase/database';
-import app from '../config/firebaseConfig';
 import _ from 'lodash';
 
 const dailyReadings = [
